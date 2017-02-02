@@ -439,6 +439,7 @@ body[dir="rtl"] .fixedDataTableColumnResizerLineLayout_main {
   width: 12px;
   margin-right: -12px;
   float: left;
+  cursor: move;
 }
 .fixedDataTableCellLayout_columnReorderContainer:after {
 	content: '::';

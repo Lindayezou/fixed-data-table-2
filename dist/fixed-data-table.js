@@ -448,6 +448,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    rowHeightGetter: PropTypes.func,
 
 	    /**
+	     * If specified, `rowDropdownGetter(index)` is called for each row and the
+	     * returned data is shown as a dropdown.
+	     */
+	    rowDropdownGetter: PropTypes.func,
+
+	    /**
+	     * If specified, `rowExpansionHeightGetter(index)` is called for each row and the
+	     * returned value adds to `rowHeight` for particular row.
+	     */
+	    rowDropdownHeightGetter: PropTypes.func,
+
+	    /**
 	     * To get any additional CSS classes that should be added to a row,
 	     * `rowClassNameGetter(index)` is called.
 	     */
@@ -579,6 +591,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      footerHeight: 0,
 	      groupHeaderHeight: 0,
 	      headerHeight: 0,
+
 	      showScrollbarX: true,
 	      showScrollbarY: true,
 	      touchScrollEnabled: false
@@ -588,7 +601,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var props = this.props;
 
 	    var viewportHeight = (props.height === undefined ? props.maxHeight : props.height) - (props.headerHeight || 0) - (props.footerHeight || 0) - (props.groupHeaderHeight || 0);
-	    this._scrollHelper = new _FixedDataTableScrollHelper2.default(props.rowsCount, props.rowHeight, viewportHeight, props.rowHeightGetter);
+	    this._scrollHelper = new _FixedDataTableScrollHelper2.default(props.rowsCount, props.rowHeight, viewportHeight, props.rowHeightGetter, props.rowDropdownHeightGetter);
 
 	    this._didScrollStop = (0, _debounceCore2.default)(this._didScrollStop, 200, this);
 
@@ -854,6 +867,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      rowsCount: state.rowsCount,
 	      rowGetter: state.rowGetter,
 	      rowHeightGetter: state.rowHeightGetter,
+	      rowDropdownGetter: state.rowDropdownGetter,
+	      rowDropdownHeightGetter: state.rowDropdownHeightGetter,
 	      scrollLeft: state.scrollX,
 	      scrollableColumns: state.bodyScrollableColumns,
 	      showLastRowBorder: true,
@@ -1052,13 +1067,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      // Number of rows changed, try to scroll to the row from before the
 	      // change
 	      var viewportHeight = (props.height === undefined ? props.maxHeight : props.height) - (props.headerHeight || 0) - (props.footerHeight || 0) - (props.groupHeaderHeight || 0);
-	      this._scrollHelper = new _FixedDataTableScrollHelper2.default(props.rowsCount, props.rowHeight, viewportHeight, props.rowHeightGetter);
+	      this._scrollHelper = new _FixedDataTableScrollHelper2.default(props.rowsCount, props.rowHeight, viewportHeight, props.rowHeightGetter, props.rowDropdownHeightGetter);
 	      scrollState = this._scrollHelper.scrollToRow(firstRowIndex, firstRowOffset);
 	      firstRowIndex = scrollState.index;
 	      firstRowOffset = scrollState.offset;
 	      scrollY = scrollState.position;
 	    } else if (oldState && props.rowHeightGetter !== oldState.rowHeightGetter) {
 	      this._scrollHelper.setRowHeightGetter(props.rowHeightGetter);
+	    } else if (oldState && props.rowDropdownHeightGetter !== oldState.rowDropdownHeightGetter) {
+	      this._scrollHelper.setRowDropdownHeightGetter(props.rowDropdownHeightGetter);
 	    }
 
 	    var lastScrollToRow = oldState ? oldState.scrollToRow : undefined;
@@ -3464,7 +3481,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	/**
 	 * Copyright Schrodinger, LLC
@@ -3532,7 +3549,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function FixedDataTableTranslateDOMPosition( /*object*/style, /*number*/x, /*number*/y) {
-	  var initialRender = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];
+	  var initialRender = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
 
 	  if (initialRender) {
 	    style.left = x + 'px';
@@ -3827,7 +3844,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 
 	var _React = __webpack_require__(29);
 
@@ -3853,26 +3870,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _joinClasses2 = _interopRequireDefault(_joinClasses);
 
-	var _FixedDataTableTranslateDOMPosition = __webpack_require__(50);
-
-	var _FixedDataTableTranslateDOMPosition2 = _interopRequireDefault(_FixedDataTableTranslateDOMPosition);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var PropTypes = _React2.default.PropTypes; /**
-	                                            * Copyright Schrodinger, LLC
-	                                            * All rights reserved.
-	                                            *
-	                                            * This source code is licensed under the BSD-style license found in the
-	                                            * LICENSE file in the root directory of this source tree. An additional grant
-	                                            * of patent rights can be found in the PATENTS file in the same directory.
-	                                            *
-	                                            * @providesModule FixedDataTableBufferedRows
-	                                            * @typechecks
-	                                            */
+	/**
+	 * Copyright Schrodinger, LLC
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule FixedDataTableBufferedRows
+	 * @typechecks
+	 */
+
+	var PropTypes = _React2.default.PropTypes;
+
 
 	var FixedDataTableBufferedRows = _React2.default.createClass({
-	  displayName: 'FixedDataTableBufferedRows',
+	  displayName: "FixedDataTableBufferedRows",
 
 
 	  propTypes: {
@@ -3891,6 +3907,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    rowClassNameGetter: PropTypes.func,
 	    rowsCount: PropTypes.number.isRequired,
 	    rowHeightGetter: PropTypes.func,
+	    rowDropdownGetter: PropTypes.func,
+	    rowDropdownHeightGetter: PropTypes.func,
 	    rowPositionGetter: PropTypes.func.isRequired,
 	    scrollLeft: PropTypes.number.isRequired,
 	    scrollableColumns: PropTypes.array.isRequired,
@@ -3958,10 +3976,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this._staticRowArray.length = rowsToRender.length;
 
+	    var baseOffsetTop = props.firstRowOffset - props.rowPositionGetter(props.firstRowIndex) + props.offsetTop;
+
 	    for (var i = 0; i < rowsToRender.length; ++i) {
 	      var rowIndex = rowsToRender[i];
 	      var currentRowHeight = this._getRowHeight(rowIndex);
-	      var rowOffsetTop = rowPositions[rowIndex];
+	      var currentRowDropdownHeight = this._getRowDropdownHeight(rowIndex);
+	      var currentRowDropdown = this._getRowDropdown(rowIndex);
+	      var rowOffsetTop = baseOffsetTop + rowPositions[rowIndex];
 
 	      var hasBottomBorder = rowIndex === props.rowsCount - 1 && props.showLastRowBorder;
 
@@ -3971,6 +3993,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        index: rowIndex,
 	        width: props.width,
 	        height: currentRowHeight,
+	        dropdown: currentRowDropdown,
+	        dropdownHeight: currentRowDropdownHeight,
 	        scrollLeft: Math.round(props.scrollLeft),
 	        offsetTop: Math.round(rowOffsetTop),
 	        fixedColumns: props.fixedColumns,
@@ -3987,23 +4011,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    }
 
-	    var firstRowPosition = props.rowPositionGetter(props.firstRowIndex);
-
-	    var style = {
-	      position: 'absolute',
-	      pointerEvents: props.isScrolling ? 'none' : 'auto'
-	    };
-
-	    (0, _FixedDataTableTranslateDOMPosition2.default)(style, 0, props.firstRowOffset - firstRowPosition + props.offsetTop, this._initialRender);
-
 	    return _React2.default.createElement(
-	      'div',
-	      { style: style },
+	      "div",
+	      null,
 	      this._staticRowArray
 	    );
 	  },
 	  _getRowHeight: function _getRowHeight( /*number*/index) /*number*/{
 	    return this.props.rowHeightGetter ? this.props.rowHeightGetter(index) : this.props.defaultRowHeight;
+	  },
+	  _getRowDropdown: function _getRowDropdown(index) {
+	    return this.props.rowDropdownGetter ? this.props.rowDropdownGetter(index) : null;
+	  },
+	  _getRowDropdownHeight: function _getRowDropdownHeight( /*number*/index) /*number*/{
+	    return this.props.rowDropdownHeightGetter ? this.props.rowDropdownHeightGetter(index) : 0;
 	  }
 	});
 
@@ -4616,7 +4637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	var FixedDataTableRowImpl = _React2.default.createClass({
-	  displayName: 'FixedDataTableRowImpl',
+	  displayName: "FixedDataTableRowImpl",
 
 
 	  propTypes: {
@@ -4632,6 +4653,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * Height of the row.
 	     */
 	    height: PropTypes.number.isRequired,
+
+	    /**
+	     * dropdown content of each row
+	     */
+	    dropdown: PropTypes.any,
+
+	    /**
+	     * Height of the dropdown.
+	     */
+	    dropdownHeight: PropTypes.number,
 
 	    /**
 	     * The row index.
@@ -4704,7 +4735,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  render: function render() /*object*/{
 	    var style = {
 	      width: this.props.width,
-	      height: this.props.height
+	      height: this.props.height + this.props.dropdownHeight
 	    };
 
 	    var className = (0, _cx2.default)({
@@ -4716,7 +4747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	    var fixedColumnsWidth = this._getColumnsWidth(this.props.fixedColumns);
 	    var fixedColumns = _React2.default.createElement(_FixedDataTableCellGroup2.default, {
-	      key: 'fixed_cells',
+	      key: "fixed_cells",
 	      isScrolling: this.props.isScrolling,
 	      height: this.props.height,
 	      left: 0,
@@ -4734,7 +4765,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    });
 	    var columnsLeftShadow = this._renderColumnsLeftShadow(fixedColumnsWidth);
 	    var scrollableColumns = _React2.default.createElement(_FixedDataTableCellGroup2.default, {
-	      key: 'scrollable_cells',
+	      key: "scrollable_cells",
 	      isScrolling: this.props.isScrolling,
 	      height: this.props.height,
 	      left: this.props.scrollLeft,
@@ -4754,8 +4785,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var scrollableColumnsWidth = this._getColumnsWidth(this.props.scrollableColumns);
 	    var columnsRightShadow = this._renderColumnsRightShadow(fixedColumnsWidth + scrollableColumnsWidth);
 
+	    var dropdownWrapper;
+	    if (this.props.dropdownHeight) {
+	      var dropdownStyle = {
+	        position: 'relative',
+	        top: this.props.height,
+	        width: this.props.width,
+	        height: this.props.dropdownHeight
+	      };
+
+	      dropdownWrapper = _React2.default.createElement(
+	        "div",
+	        { className: (0, _cx2.default)('fixedDataTableRowLayout/dropdown'), style: dropdownStyle },
+	        this.props.dropdown
+	      );
+	    }
+
 	    return _React2.default.createElement(
-	      'div',
+	      "div",
 	      {
 	        className: (0, _joinClasses2.default)(className, this.props.className),
 	        onClick: this.props.onClick ? this._onClick : null,
@@ -4765,13 +4812,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        onMouseLeave: this.props.onMouseLeave ? this._onMouseLeave : null,
 	        style: style },
 	      _React2.default.createElement(
-	        'div',
+	        "div",
 	        { className: (0, _cx2.default)('fixedDataTableRowLayout/body') },
 	        fixedColumns,
 	        scrollableColumns,
 	        columnsLeftShadow
 	      ),
-	      columnsRightShadow
+	      columnsRightShadow,
+	      dropdownWrapper
 	    );
 	  },
 	  _getColumnsWidth: function _getColumnsWidth( /*array*/columns) /*number*/{
@@ -4792,7 +4840,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      left: left,
 	      height: this.props.height
 	    };
-	    return _React2.default.createElement('div', { className: className, style: style });
+	    return _React2.default.createElement("div", { className: className, style: style });
 	  },
 	  _renderColumnsRightShadow: function _renderColumnsRightShadow( /*number*/totalWidth) /*?object*/{
 	    if (Math.ceil(this.props.scrollLeft + this.props.width) < totalWidth) {
@@ -4800,7 +4848,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var style = {
 	        height: this.props.height
 	      };
-	      return _React2.default.createElement('div', { className: className, style: style });
+	      return _React2.default.createElement("div", { className: className, style: style });
 	    }
 	  },
 	  _onClick: function _onClick( /*object*/event) {
@@ -4821,7 +4869,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 	var FixedDataTableRow = _React2.default.createClass({
-	  displayName: 'FixedDataTableRow',
+	  displayName: "FixedDataTableRow",
 
 
 	  propTypes: {
@@ -4832,6 +4880,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * Height of the row.
 	     */
 	    height: PropTypes.number.isRequired,
+
+	    /**
+	     * Dropdown content
+	     */
+	    dropdown: PropTypes.any,
+
+	    /**
+	     * Height of the dropdown.
+	     */
+	    dropdownHeight: PropTypes.number,
 
 	    /**
 	     * Z-index on which the row will be displayed. Used e.g. for keeping
@@ -4857,19 +4915,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._initialRender = false;
 	  },
 	  render: function render() /*object*/{
+	    var dropdownHeight = this.props.dropdownHeight || 0;
+
 	    var style = {
 	      width: this.props.width,
-	      height: this.props.height,
+	      height: this.props.height + dropdownHeight,
 	      zIndex: this.props.zIndex ? this.props.zIndex : 0
 	    };
+
 	    (0, _FixedDataTableTranslateDOMPosition2.default)(style, 0, this.props.offsetTop, this._initialRender);
 
 	    return _React2.default.createElement(
-	      'div',
+	      "div",
 	      {
 	        style: style,
 	        className: (0, _cx2.default)('fixedDataTableRowLayout/rowWrapper') },
 	      _React2.default.createElement(FixedDataTableRowImpl, _extends({}, this.props, {
+	        dropdownHeight: dropdownHeight,
 	        offsetTop: undefined,
 	        zIndex: undefined
 	      }))
@@ -5088,10 +5150,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	  },
 	  render: function render() /*object*/{
-	    var _props = this.props;
-	    var offsetLeft = _props.offsetLeft;
-
-	    var props = _objectWithoutProperties(_props, ['offsetLeft']);
+	    var _props = this.props,
+	        offsetLeft = _props.offsetLeft,
+	        props = _objectWithoutProperties(_props, ['offsetLeft']);
 
 	    var style = {
 	      height: props.height
@@ -5745,12 +5806,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return DEFAULT_PROPS;
 	  },
 	  render: function render() /*object*/{
-	    var _props = this.props;
-	    var height = _props.height;
-	    var width = _props.width;
-	    var columnKey = _props.columnKey;
-
-	    var props = _objectWithoutProperties(_props, ['height', 'width', 'columnKey']);
+	    var _props = this.props,
+	        height = _props.height,
+	        width = _props.width,
+	        columnKey = _props.columnKey,
+	        props = _objectWithoutProperties(_props, ['height', 'width', 'columnKey']);
 
 	    var style = {
 	      height: height,
@@ -5943,16 +6003,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  render: function render() {
 	    //Remove some props like columnKey and rowIndex so we don't pass it into the div
-	    var _props = this.props;
-	    var height = _props.height;
-	    var width = _props.width;
-	    var style = _props.style;
-	    var className = _props.className;
-	    var children = _props.children;
-	    var columnKey = _props.columnKey;
-	    var rowIndex = _props.rowIndex;
-
-	    var props = _objectWithoutProperties(_props, ['height', 'width', 'style', 'className', 'children', 'columnKey', 'rowIndex']);
+	    var _props = this.props,
+	        height = _props.height,
+	        width = _props.width,
+	        style = _props.style,
+	        className = _props.className,
+	        children = _props.children,
+	        columnKey = _props.columnKey,
+	        rowIndex = _props.rowIndex,
+	        props = _objectWithoutProperties(_props, ['height', 'width', 'style', 'className', 'children', 'columnKey', 'rowIndex']);
 
 	    var innerStyle = _extends({
 	      height: height,
@@ -6394,7 +6453,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /*number*/rowCount,
 	  /*number*/defaultRowHeight,
 	  /*number*/viewportHeight,
-	  /*?function*/rowHeightGetter) {
+	  /*?function*/rowHeightGetter,
+	  /*?function*/rowDropdownHeightGetter) {
 	    _classCallCheck(this, FixedDataTableScrollHelper);
 
 	    this._rowOffsets = _PrefixIntervalTree2.default.uniform(rowCount, defaultRowHeight);
@@ -6409,6 +6469,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._rowHeightGetter = rowHeightGetter ? rowHeightGetter : function () {
 	      return defaultRowHeight;
 	    };
+	    this._rowDropdownHeightGetter = rowDropdownHeightGetter ? rowDropdownHeightGetter : function () {
+	      return 0;
+	    };
 	    this._viewportHeight = viewportHeight;
 	    this.scrollRowIntoView = this.scrollRowIntoView.bind(this);
 	    this.setViewportHeight = this.setViewportHeight.bind(this);
@@ -6416,6 +6479,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.scrollTo = this.scrollTo.bind(this);
 	    this.scrollToRow = this.scrollToRow.bind(this);
 	    this.setRowHeightGetter = this.setRowHeightGetter.bind(this);
+	    this.setRowDropdownHeightGetter = this.setRowDropdownHeightGetter.bind(this);
 	    this.getContentHeight = this.getContentHeight.bind(this);
 	    this.getRowPosition = this.getRowPosition.bind(this);
 
@@ -6426,6 +6490,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setRowHeightGetter',
 	    value: function setRowHeightGetter( /*function*/rowHeightGetter) {
 	      this._rowHeightGetter = rowHeightGetter;
+	    }
+	  }, {
+	    key: 'setRowDropdownHeightGetter',
+	    value: function setRowDropdownHeightGetter( /*function*/rowDropdownHeightGetter) {
+	      this._rowDropdownHeightGetter = rowDropdownHeightGetter;
 	    }
 	  }, {
 	    key: 'setViewportHeight',
@@ -6466,7 +6535,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (rowIndex < 0 || rowIndex >= this._rowCount) {
 	        return 0;
 	      }
-	      var newHeight = this._rowHeightGetter(rowIndex);
+	      var newHeight = this._rowHeightGetter(rowIndex) + this._rowDropdownHeightGetter(rowIndex);
 	      if (newHeight !== this._storedHeights[rowIndex]) {
 	        var change = newHeight - this._storedHeights[rowIndex];
 	        this._rowOffsets.set(rowIndex, newHeight);
@@ -7186,7 +7255,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Returns true when the values of all keys are strictly equal.
 	 */
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	function shallowEqual(objA, objB) {
 	  if (objA === objB) {
